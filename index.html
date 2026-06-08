@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Perodua Loan Calculator & Semak Kelayakan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#1a1a1a;padding-bottom:100px}
+
+/* === TABS === */
+.tab-bar{display:flex;background:#fff;border-bottom:2px solid #e5e5e5;position:sticky;top:0;z-index:50}
+.tab-btn{flex:1;padding:14px 10px;text-align:center;font-size:13px;font-weight:700;color:#888;cursor:pointer;border:none;background:0 0;border-bottom:3px solid transparent;transition:all .2s}
+.tab-btn.active{color:#ED1C24;border-bottom-color:#ED1C24}
+.tab-page{display:none}
+.tab-page.active{display:block}
+
+/* === HEADER === */
+.header{background:linear-gradient(135deg,#ED1C24,#C4161D);color:#fff;padding:24px 16px 20px;text-align:center}
+.header h1{font-size:20px;font-weight:700}
+.header p{font-size:13px;opacity:.85;margin-top:4px}
+
+/* ============= LOAN CALCULATOR ============= */
+.section{margin:16px}
+.section-title{font-size:14px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding:0 4px}
+.step-label{font-size:11px;font-weight:700;color:#ED1C24;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.model-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.model-btn{background:#fff;border:2px solid #e5e5e5;border-radius:12px;padding:10px 6px 8px;text-align:center;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.model-btn:active{transform:scale(.96)}
+.model-btn img{width:100%;height:65px;object-fit:contain;display:block;margin-bottom:6px}
+.model-btn .name{font-size:13px;font-weight:700}
+.model-btn .price{font-size:11px;color:#888;margin-top:2px}
+.model-btn.selected{border-color:#ED1C24;background:#fff5f5;box-shadow:0 0 0 3px rgba(237,28,36,.15)}
+.model-btn .check{display:none;width:18px;height:18px;background:#ED1C24;border-radius:50%;color:#fff;font-size:11px;line-height:18px;margin:0 auto 4px}
+.model-btn.selected .check{display:block}
+.selected-model{display:none;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin:0 16px;position:relative}
+.selected-model.show{display:block}
+.selected-model img{width:100%;height:160px;object-fit:cover;display:block;background:#f0f0f0}
+.selected-model .info{padding:14px 16px 16px}
+.selected-model .name{font-size:18px;font-weight:700}
+.selected-model .price-tag{font-size:14px;color:#ED1C24;font-weight:600;margin-top:2px}
+.selected-model .change-btn{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer}
+.form-section{display:none;background:#fff;border-radius:14px;padding:20px;margin:0 16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.form-section.show{display:block}
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+.input-wrap{display:flex;align-items:center;background:#f8f8f8;border:2px solid #e5e5e5;border-radius:10px;padding:0 14px;transition:border-color .2s}
+.input-wrap:focus-within{border-color:#ED1C24}
+.input-wrap span.prefix{font-size:16px;font-weight:700;color:#999;margin-right:6px}
+.input-wrap span.suffix{font-size:13px;font-weight:600;color:#999;margin-left:6px}
+.input-wrap input{flex:1;border:none;background:0 0;font-size:16px;font-weight:600;padding:12px 0;outline:0;width:100%}
+.input-wrap input::placeholder{color:#ccc}
+.input-wrap select{flex:1;border:none;background:0 0;font-size:15px;font-weight:600;padding:12px 0;outline:0;width:100%;color:#1a1a1a;cursor:pointer;-webkit-appearance:none;appearance:none}
+.form-hint{font-size:11px;color:#aaa;margin-top:4px;padding-left:2px}
+.tenure-group{display:flex;gap:8px}
+.tenure-btn{flex:1;padding:12px;border:2px solid #e5e5e5;border-radius:10px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;color:#888}
+.tenure-btn:active{transform:scale(.96)}
+.tenure-btn.active{border-color:#ED1C24;background:#fff5f5;color:#ED1C24;box-shadow:0 0 0 3px rgba(237,28,36,.15)}
+.result-card{display:none;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin:16px}
+.result-card.show{display:block}
+.result-card .big{text-align:center;padding:20px;background:linear-gradient(135deg,#ED1C24,#C4161D);color:#fff}
+.result-card .big .label{font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:1px}
+.result-card .big .editable-monthly{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px}
+.result-card .big .editable-monthly .rm{font-size:18px;font-weight:600;opacity:.9}
+.result-card .big .editable-monthly input{width:120px;background:rgba(255,255,255,.95);border:none;border-radius:8px;font-size:40px;font-weight:800;text-align:center;color:#1a1a1a;padding:2px 8px;outline:2px solid rgba(255,255,255,.3)}
+.result-card .big .editable-monthly input:focus{outline:3px solid #fff;background:#fff}
+.result-card .big .editable-monthly .bln{font-size:18px;font-weight:600;opacity:.9}
+.result-card .big .detail{font-size:13px;opacity:.8;margin-top:6px}
+.result-card .detail-grid{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.result-card .detail-item{text-align:center}
+.result-card .detail-item .val{font-size:18px;font-weight:700;color:#1a1a1a}
+.result-card .detail-item .lbl{font-size:11px;color:#888;margin-top:2px}
+.result-card .result-actions{padding:0 20px 16px;display:flex;gap:10px}
+.result-card .result-actions a{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;display:block;text-align:center;text-decoration:none}
+.result-card .result-actions a:active{opacity:.7}
+.result-card .result-actions .btn-green{background:#25D366;color:#fff}
+.elig-warning{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:10px 14px;margin:0 16px 16px;font-size:13px;color:#dc2626;font-weight:600;text-align:center}
+.elig-warning.show{display:block}
+
+/* ============= ELIGIBILITY CHECKER ============= */
+#page-elig .salary-section{margin:-12px 16px 0;position:relative;z-index:2}
+#page-elig .salary-card{background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.1);padding:20px}
+#page-elig .salary-card label{display:block;font-size:.8rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+#page-elig .salary-input-wrap{display:flex;align-items:center;background:#f8f8f8;border:2px solid #e5e5e5;border-radius:10px;padding:4px 16px;transition:border-color .2s}
+#page-elig .salary-input-wrap:focus-within{border-color:#ED1C24}
+#page-elig .salary-input-wrap span{font-size:1.4rem;font-weight:700;color:#999;margin-right:8px}
+#page-elig .salary-input-wrap input{flex:1;border:none;background:0 0;font-size:1.6rem;font-weight:700;padding:12px 0;outline:0;color:#1a1a1a;min-width:0}
+#page-elig .salary-input-wrap input::placeholder{color:#bbb}
+#page-elig .tenure-selector{display:flex;gap:8px;margin-top:12px}
+#page-elig .disclaimer{font-size:.7rem;color:#666;text-align:center;margin-top:10px;line-height:1.4}
+#page-elig .models-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;max-width:600px;margin:0 auto}
+@media(min-width:480px){#page-elig .models-grid{grid-template-columns:1fr 1fr 1fr}}
+#page-elig .model-card{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;cursor:pointer;transition:all .2s;position:relative;border:2px solid transparent}
+#page-elig .model-card:active{transform:scale(.97)}
+#page-elig .model-card.pass{border-color:#16a34a}
+#page-elig .model-card.fail{border-color:transparent;opacity:.65}
+#page-elig .model-card.selected{border-color:#ED1C24;box-shadow:0 0 0 3px rgba(237,28,36,.15)}
+#page-elig .model-img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#f0f0f0;display:block;padding:12px}
+#page-elig .model-info{padding:10px 12px 12px}
+#page-elig .model-name{font-size:.9rem;font-weight:700}
+#page-elig .model-price{font-size:.75rem;color:#666;margin-top:2px}
+#page-elig .model-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;margin-top:6px}
+#page-elig .model-badge.lulus{background:#dcfce7;color:#16a34a}
+#page-elig .model-badge.gagal{background:#fee2e2;color:#ED1C24}
+#page-elig .detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100}
+#page-elig .detail-overlay.open{display:block}
+#page-elig .detail-panel{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:101;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,1,.36,1);max-height:85vh;overflow-y:auto;padding-bottom:16px}
+#page-elig .detail-panel.open{transform:translateY(0)}
+#page-elig .detail-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:12px auto 0}
+#page-elig .detail-close{position:absolute;top:12px;right:16px;width:32px;height:32px;border:none;background:#f0f0f0;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666}
+#page-elig .detail-content{padding:16px 20px 20px}
+#page-elig .detail-img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#f8f8f8;border-radius:10px;margin-bottom:16px}
+#page-elig .detail-title{font-size:1.3rem;font-weight:800;margin-bottom:4px}
+#page-elig .detail-tagline{font-size:.85rem;color:#666;margin-bottom:8px}
+#page-elig .detail-summary{display:flex;gap:12px;margin-bottom:16px}
+#page-elig .summary-item{flex:1;background:#f8f8f8;border-radius:10px;padding:10px;text-align:center}
+#page-elig .summary-item .val{font-size:1rem;font-weight:700;color:#ED1C24}
+#page-elig .summary-item .lbl{font-size:.7rem;color:#666;margin-top:2px}
+#page-elig .variants-title{font-size:.85rem;font-weight:700;margin-bottom:8px;color:#666}
+#page-elig .variants-table{width:100%;border-collapse:collapse;font-size:.82rem}
+#page-elig .variants-table th{text-align:left;padding:8px 10px;font-size:.7rem;text-transform:uppercase;color:#666;border-bottom:2px solid #e5e5e5;font-weight:600}
+#page-elig .variants-table td{padding:10px;border-bottom:1px solid #e5e5e5}
+#page-elig .variants-table tr:last-child td{border-bottom:none}
+#page-elig .variant-name{font-weight:600}
+#page-elig .variant-monthly{font-weight:700;color:#ED1C24;text-align:right}
+#page-elig .variant-status{text-align:center}
+#page-elig .variant-status .dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+#page-elig .variant-status .dot.pass{background:#16a34a}
+#page-elig .variant-status .dot.fail{background:#ccc}
+#page-elig .detail-cta{display:block;width:100%;padding:14px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;text-align:center;text-decoration:none;margin-top:16px;transition:background .2s}
+#page-elig .detail-cta:active{background:#1da851}
+#page-elig .result-count{padding:8px 16px 0;font-size:.8rem;color:#666;max-width:600px;margin:0 auto}
+input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type="number"]{-moz-appearance:textfield}
+
+@media(min-width:600px){
+  .model-grid{grid-template-columns:repeat(4,1fr);max-width:700px;margin:0 auto}
+  .section,.form-section.show,.selected-model.show,.result-card.show,.elig-warning.show{max-width:600px;margin-left:auto;margin-right:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('loan')">🚗 Loan Calculator</button>
+  <button class="tab-btn" onclick="switchTab('elig')">✅ Semak Kelayakan</button>
+</div>
+
+<!-- ============ PAGE: LOAN CALCULATOR ============ -->
+<div class="tab-page active" id="page-loan">
+<div class="header">
+  <h1>🚗 Perodua Loan Calculator</h1>
+  <p>Kira anggaran bayaran bulanan ikut model & varian</p>
+</div>
+
+<div class="section" id="stepModel">
+  <div class="step-label">Langkah 1</div>
+  <div class="section-title">Pilih Model Perodua</div>
+  <div class="model-grid" id="modelGrid"></div>
+</div>
+
+<div class="selected-model" id="selectedModel">
+  <button class="change-btn" onclick="resetModel()">✕ Tukar</button>
+  <img id="selectedImg" src="" alt="">
+  <div class="info">
+    <div class="name" id="selectedName"></div>
+    <div class="price-tag" id="selectedPrice"></div>
+  </div>
+</div>
+
+<div class="form-section" id="formSection">
+  <div class="step-label">Langkah 2</div>
+  <div class="section-title" style="margin-bottom:16px">Masukkan Butiran</div>
+  <div class="form-group">
+    <label>🚗 Pilih Varian</label>
+    <div class="input-wrap">
+      <select id="variantSelect" onchange="onVariantChange()"></select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>💰 Harga Kereta</label>
+    <div class="input-wrap">
+      <span class="prefix">RM</span>
+      <input type="number" id="priceInput" placeholder="0" min="0" readonly style="color:#666">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>📆 Tempoh Pinjaman</label>
+    <div class="tenure-group" id="tenureGroup">
+      <button class="tenure-btn" data-years="5">5 Tahun</button>
+      <button class="tenure-btn active" data-years="7">7 Tahun</button>
+      <button class="tenure-btn" data-years="9">9 Tahun</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>🏦 Gaji Bulanan (opsyenal)</label>
+    <div class="input-wrap">
+      <span class="prefix">RM</span>
+      <input type="number" id="salaryInput" placeholder="0" min="0">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>💵 Downpayment (Deposit)</label>
+    <div class="input-wrap">
+      <span class="prefix">RM</span>
+      <input type="number" id="dpInput" placeholder="0" min="0">
+    </div>
+    <div class="form-hint">Minimum 10% = <span id="dpMinHint">RM0</span>. <span style="color:#ED1C24;font-weight:600;cursor:pointer" onclick="setMinDP()">Guna minimum</span></div>
+  </div>
+  <div class="form-group">
+    <label>📊 Interest Rate (% setahun)</label>
+    <div class="input-wrap">
+      <input type="number" id="rateInput" placeholder="3.0" min="0" max="10" step="0.1" value="3.0" style="text-align:center">
+      <span class="suffix">%</span>
+    </div>
+    <div class="form-hint">Kebiasaan bank: 3.0% – 4.5% flat rate</div>
+  </div>
+</div>
+
+<div class="result-card" id="resultCard">
+  <div class="big">
+    <div class="label">Bayaran Bulanan</div>
+    <div class="editable-monthly">
+      <span class="rm">RM</span>
+      <input type="number" id="monthlyInput" value="0" oninput="onMonthlyEdit()">
+      <span class="bln">/bln</span>
+    </div>
+    <div class="detail" id="resultDetails">Perodua — <span id="resultVariant">-</span> • <span id="resultTenure">7</span> tahun</div>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-item"><div class="val" id="rPrice">RM0</div><div class="lbl">Harga Kereta</div></div>
+    <div class="detail-item"><div class="val" id="rLoan">RM0</div><div class="lbl">Jumlah Pinjaman</div></div>
+    <div class="detail-item"><div class="val" id="rInterest">RM0</div><div class="lbl">Jumlah Faedah</div></div>
+    <div class="detail-item"><div class="val" id="rDP">RM0</div><div class="lbl">Downpayment</div></div>
+    <div class="detail-item"><div class="val" id="rRate">3.0%</div><div class="lbl">Interest Rate</div></div>
+    <div class="detail-item"><div class="val" id="rTenure">7 thn</div><div class="lbl">Tempoh</div></div>
+  </div>
+  <div class="result-actions">
+    <a class="btn-green" id="waLinkLoan" target="_blank">💬 Order Sales</a>
+  </div>
+</div>
+<div class="elig-warning" id="eligWarning">⚠️ Bayaran bulanan melebihi 30% gaji. Sila naikkan downpayment.</div>
+</div>
+
+<!-- ============ PAGE: ELIGIBILITY CHECKER ============ -->
+<div class="tab-page" id="page-elig">
+<div class="header">
+  <h1>🚗 Kereta Yang Sesuai Ikut Gaji</h1>
+  <p>Masukkan gaji bersih & semak model Perodua yang anda mampu</p>
+</div>
+
+<div class="salary-section">
+  <div class="salary-card">
+    <label>Gaji Bersih Anda</label>
+    <div class="salary-input-wrap">
+      <span>RM</span>
+      <input type="number" id="eligSalaryInput" placeholder="cth: 3000" min="1000" max="50000" step="100">
+    </div>
+    <div class="tenure-selector">
+      <button class="tenure-btn" data-years="5">5 Tahun</button>
+      <button class="tenure-btn active" data-years="7">7 Tahun</button>
+      <button class="tenure-btn" data-years="9">9 Tahun</button>
+    </div>
+    <div class="disclaimer">Anggaran sahaja. Tertakluk kepada penilaian kredit bank.</div>
+  </div>
+</div>
+
+<div id="eligResultCount" class="result-count"></div>
+<div class="models-grid" id="eligModelsGrid"></div>
+
+<div class="detail-overlay" id="eligOverlay"></div>
+<div class="detail-panel" id="eligPanel">
+  <div class="detail-handle"></div>
+  <button class="detail-close" id="eligClose">✕</button>
+  <div class="detail-content" id="eligDetailContent"></div>
+</div>
+</div>
+
+<script>
+// ============ TAB SWITCHING ============
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  if (tab === 'loan') {
+    document.querySelector('.tab-btn').classList.add('active');
+    document.getElementById('page-loan').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('page-elig').classList.add('active');
+  }
+}
+
+// ============ LOAN CALCULATOR ============
+const MODELS = [
+  {id:'axia',name:'AXIA',priceFrom:38600,priceTo:49500,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/axia.webp',
+    variants:[
+      {name:'1.0L G (D-CVT)',price:38600},{name:'1.0L X (D-CVT)',price:40000},
+      {name:'1.0L SE (D-CVT)',price:44000},{name:'1.0L AV (D-CVT)',price:49500}]},
+  {id:'bezza',name:'BEZZA',priceFrom:34580,priceTo:49980,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/bezza.webp',
+    variants:[
+      {name:'1.0 G (Manual)',price:34580},{name:'1.0 G (Automatic)',price:36580},
+      {name:'1.3 X (Automatic)',price:43980},{name:'1.3 AV (Automatic)',price:49980}]},
+  {id:'myvi',name:'MYVI',priceFrom:46500,priceTo:59900,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/myvi.webp',
+    variants:[
+      {name:'1.3L G (Without PSDA, D-CVT)',price:46500},{name:'1.3L G (D-CVT)',price:48500},
+      {name:'1.5L X (D-CVT)',price:50900},{name:'1.5L H (D-CVT)',price:54900},{name:'1.5L AV (D-CVT)',price:59900}]},
+  {id:'alza',name:'ALZA',priceFrom:62500,priceTo:75500,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/alza.webp',
+    variants:[
+      {name:'1.5L X (D-CVT)',price:62500},{name:'1.5L H (D-CVT)',price:68000},{name:'1.5L AV (D-CVT)',price:75500}]},
+  {id:'ativa',name:'ATIVA',priceFrom:62500,priceTo:73400,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/ativa.webp',
+    variants:[
+      {name:'1.0L Turbo X (Metallic)',price:62500},{name:'1.0L Turbo H (Metallic)',price:67300},
+      {name:'1.0L Turbo H (Special Metallic)',price:67800},{name:'1.0L Turbo AV (Metallic)',price:72600},
+      {name:'1.0L Turbo AV (Special Metallic)',price:73100},{name:'1.0L Turbo AV (2-Tone)',price:73400}]},
+  {id:'aruz',name:'ARUZ',priceFrom:72900,priceTo:77900,
+    img:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/aruz.webp',
+    variants:[
+      {name:'1.5 X (Automatic)',price:72900},{name:'1.5 AV (Automatic)',price:77900}]},
+  {id:'traz',name:'TRAZ',priceFrom:76100,priceTo:81000,
+    img:'https://www.perodua.com.my/assets/car/traz/info_box/traz_info_kv_d_2x.webp',
+    variants:[
+      {name:'1.5 X (D-CVT)',price:76100},{name:'1.5 H (D-CVT)',price:79000},{name:'1.5 H 2T (2-Tone)',price:81000}]}
+];
+
+let selectedModel = null;
+let selectedVariant = null;
+let currentTenure = 7;
+let isUserEditingMonthly = false;
+
+function calcLoan(price, dp, rate, years) {
+  const loan = price - dp;
+  if (loan <= 0) return { loanAmount: 0, totalInterest: 0, totalPayment: 0, monthly: 0 };
+  const interest = loan * (rate / 100) * years;
+  const total = loan + interest;
+  return { loanAmount: loan, totalInterest: interest, totalPayment: total, monthly: total / (years * 12) };
+}
+
+function calcDPFromMonthly(targetMonthly, price, rate, years) {
+  const totalMonths = years * 12;
+  const factor = 1 + (rate / 100) * years;
+  return Math.max(Math.round(price - (targetMonthly * totalMonths) / factor), 0);
+}
+
+function getInputs() {
+  return {
+    price: parseFloat(document.getElementById('priceInput').value) || 0,
+    dp: parseFloat(document.getElementById('dpInput').value) || 0,
+    rate: parseFloat(document.getElementById('rateInput').value) || 3.0
+  };
+}
+
+function updateAll() {
+  const { price, dp, rate } = getInputs();
+  const r = calcLoan(price, dp, rate, currentTenure);
+  const monthlyField = document.getElementById('monthlyInput');
+  if (!isUserEditingMonthly) {
+    monthlyField.value = Math.round(r.monthly);
+  }
+  document.getElementById('resultVariant').textContent = selectedVariant ? selectedVariant.name : '-';
+  document.getElementById('resultTenure').textContent = currentTenure;
+  document.getElementById('rPrice').textContent = 'RM' + price.toLocaleString('en-MY');
+  document.getElementById('rLoan').textContent = 'RM' + Math.round(r.loanAmount).toLocaleString('en-MY');
+  document.getElementById('rInterest').textContent = 'RM' + Math.round(r.totalInterest).toLocaleString('en-MY');
+  document.getElementById('rDP').textContent = 'RM' + dp.toLocaleString('en-MY');
+  document.getElementById('rRate').textContent = rate + '%';
+  document.getElementById('rTenure').textContent = currentTenure + ' thn';
+  const msg = `Hi, saya nak tahu pasal Perodua ${selectedModel?.name || ''} (${selectedVariant?.name || ''}). Monthly dalam RM${Math.round(r.monthly).toLocaleString('en-MY')}/bln untuk ${currentTenure} tahun. Boleh saya dapatkan info lanjut?`;
+  document.getElementById('waLinkLoan').href = `https://wa.me/60173500106?text=${encodeURIComponent(msg)}`;
+  const salary = parseFloat(document.getElementById('salaryInput').value) || 0;
+  const warn = document.getElementById('eligWarning');
+  if (salary > 0 && r.monthly > salary * 0.3) {
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+  updateDpHint();
+}
+
+function onMonthlyEdit() {
+  const target = parseFloat(document.getElementById('monthlyInput').value);
+  if (!target || target <= 0) return;
+  isUserEditingMonthly = true;
+  const { price, rate } = getInputs();
+  const newDP = calcDPFromMonthly(target, price, rate, currentTenure);
+  const minDP = Math.round(price * 0.1);
+  if (newDP >= minDP) {
+    document.getElementById('dpInput').value = newDP;
+  } else {
+    document.getElementById('dpInput').value = minDP;
+  }
+  updateAll();
+  isUserEditingMonthly = false;
+}
+
+function setMinDP() {
+  const { price } = getInputs();
+  if (!price) return;
+  document.getElementById('dpInput').value = Math.round(price * 0.1);
+  updateAll();
+}
+
+function updateDpHint() {
+  const { price } = getInputs();
+  if (!price) return;
+  document.getElementById('dpMinHint').textContent = 'RM' + Math.round(price * 0.1).toLocaleString('en-MY');
+}
+
+function renderModels() {
+  const grid = document.getElementById('modelGrid');
+  MODELS.forEach(m => {
+    const btn = document.createElement('div');
+    btn.className = 'model-btn';
+    btn.dataset.id = m.id;
+    btn.innerHTML = `<div class="check">✓</div><img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.style.display='none'"><div class="name">${m.name}</div><div class="price">RM${m.priceFrom.toLocaleString()} – RM${m.priceTo.toLocaleString()}</div>`;
+    btn.onclick = () => selectModel(m.id);
+    grid.appendChild(btn);
+  });
+}
+
+function selectModel(id) {
+  selectedModel = MODELS.find(m => m.id === id);
+  if (!selectedModel) return;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === id));
+  const sm = document.getElementById('selectedModel');
+  document.getElementById('selectedImg').src = selectedModel.img;
+  document.getElementById('selectedName').textContent = selectedModel.name;
+  document.getElementById('selectedPrice').textContent = 'RM' + selectedModel.priceFrom.toLocaleString() + ' – RM' + selectedModel.priceTo.toLocaleString();
+  sm.classList.add('show');
+  const vs = document.getElementById('variantSelect');
+  vs.innerHTML = '';
+  selectedModel.variants.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = `${v.name} — RM${v.price.toLocaleString()}`;
+    vs.appendChild(o);
+  });
+  selectedVariant = selectedModel.variants[0];
+  document.getElementById('priceInput').value = selectedVariant.price;
+  vs.selectedIndex = 0;
+  document.getElementById('formSection').classList.add('show');
+  document.getElementById('resultCard').classList.add('show');
+  document.getElementById('eligWarning').classList.remove('show');
+  const minDp = Math.round(selectedVariant.price * 0.1);
+  document.getElementById('dpInput').value = minDp;
+  updateAll();
+  setTimeout(() => sm.scrollIntoView({behavior:'smooth',block:'center'}), 100);
+}
+
+function onVariantChange() {
+  if (!selectedModel) return;
+  selectedVariant = selectedModel.variants[parseInt(document.getElementById('variantSelect').value)];
+  document.getElementById('priceInput').value = selectedVariant.price;
+  const minDp = Math.round(selectedVariant.price * 0.1);
+  document.getElementById('dpInput').value = minDp;
+  updateAll();
+}
+
+function resetModel() {
+  selectedModel = null;
+  selectedVariant = null;
+  document.getElementById('selectedModel').classList.remove('show');
+  document.getElementById('formSection').classList.remove('show');
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('eligWarning').classList.remove('show');
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('selected'));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ ELIGIBILITY CHECKER ============
+const ELIG_MODELS = [
+  {id:'axia',name:'AXIA',tagline:'PRETTY. SMART.',category:'Compact Hatchback',
+    priceFrom:38600,priceTo:49500,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/axia.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-axia.webp',
+    variants:[{name:'1.0L G (D-CVT)',price:38600},{name:'1.0L X (D-CVT)',price:40000},{name:'1.0L SE (D-CVT)',price:44000},{name:'1.0L AV (D-CVT)',price:49500}]},
+  {id:'bezza',name:'BEZZA',tagline:'BEYOND COMPACT',category:'Compact Sedan',
+    priceFrom:34580,priceTo:49980,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/bezza.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-bezza.webp',
+    variants:[{name:'1.0 G (Manual)',price:34580},{name:'1.0 G (Automatic)',price:36580},{name:'1.3 X (Automatic)',price:43980},{name:'1.3 AV (Automatic)',price:49980}]},
+  {id:'myvi',name:'MYVI',tagline:'THE NEXT STANDARD',category:'Hatchback',
+    priceFrom:46500,priceTo:59900,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/myvi.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-myvi.webp',
+    variants:[{name:'1.3L G (Without PSDA, D-CVT)',price:46500},{name:'1.3L G (D-CVT)',price:48500},{name:'1.5L X (D-CVT)',price:50900},{name:'1.5L H (D-CVT)',price:54900},{name:'1.5L AV (D-CVT)',price:59900}]},
+  {id:'alza',name:'ALZA',tagline:'VERSATILITY REINVENTED',category:'MPV 7-Seater',
+    priceFrom:62500,priceTo:75500,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/alza.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-alza.webp',
+    variants:[{name:'1.5L X (D-CVT)',price:62500},{name:'1.5L H (D-CVT)',price:68000},{name:'1.5L AV (D-CVT)',price:75500}]},
+  {id:'ativa',name:'ATIVA',tagline:'ACTIVATE EVERY DESTINATION',category:'SUV 5-Seater',
+    priceFrom:62500,priceTo:73400,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/ativa.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-ativa.webp',
+    variants:[{name:'1.0L Turbo X (Metallic)',price:62500},{name:'1.0L Turbo H (Metallic)',price:67300},{name:'1.0L Turbo H (Special Metallic)',price:67800},{name:'1.0L Turbo AV (Metallic)',price:72600},{name:'1.0L Turbo AV (Special Metallic)',price:73100},{name:'1.0L Turbo AV (2-Tone)',price:73400}]},
+  {id:'aruz',name:'ARUZ',tagline:'ELEVATE YOUR LIFE',category:'SUV 7-Seater',
+    priceFrom:72900,priceTo:77900,
+    image:'https://www.perodua.com.my/assets/images/landing-page/cars/with-emblem/aruz.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/perodua-aruz.webp',
+    variants:[{name:'1.5 X (Automatic)',price:72900},{name:'1.5 AV (Automatic)',price:77900}]},
+  {id:'traz',name:'TRAZ',tagline:'SUV Baharu',category:'SUV 5-Seater',
+    priceFrom:76100,priceTo:81000,
+    image:'https://www.perodua.com.my/assets/car/traz/info_box/traz_info_kv_d_2x.webp',
+    thumb:'https://www.perodua.com.my/assets/images/header_menu/traz_navigation_menu_red_2x.webp',
+    variants:[{name:'1.5 X (D-CVT)',price:76100},{name:'1.5 H (D-CVT)',price:79000},{name:'1.5 H 2T (2-Tone)',price:81000}]}
+];
+
+const INTEREST_RATE = 3.0;
+const DSR_RATIO = 0.3;
+let eligSelectedModelId = null;
+let eligSalary = null;
+let eligYears = 7;
+
+function eligCalcMonthly(price, years) {
+  const dp = price * 0.1;
+  const loan = price - dp;
+  const interest = loan * (INTEREST_RATE / 100) * years;
+  return (loan + interest) / (years * 12);
+}
+
+function eligGetElig(price, salary, years) {
+  if (!salary || salary < 500) return { eligible: false, monthly: 0, neededSalary: 0 };
+  const monthly = eligCalcMonthly(price, years);
+  const eligible = monthly <= salary * DSR_RATIO;
+  const neededSalary = Math.ceil(monthly / DSR_RATIO / 100) * 100;
+  return { eligible, monthly, neededSalary };
+}
+
+function eligRender() {
+  const salary = parseInt(document.getElementById('eligSalaryInput').value) || 0;
+  eligSalary = salary;
+  const grid = document.getElementById('eligModelsGrid');
+  const resultCount = document.getElementById('eligResultCount');
+  let passCount = 0;
+  let html = '';
+  ELIG_MODELS.forEach(model => {
+    const el = eligGetElig(Math.min(...model.variants.map(v=>v.price)), salary, eligYears);
+    const isPass = el.eligible;
+    if (isPass) passCount++;
+    const variantResults = model.variants.map(v => eligGetElig(v.price, salary, eligYears));
+    const passVariants = variantResults.filter(r => r.eligible).length;
+    const cardClass = isPass ? 'model-card pass' : 'model-card fail';
+    const imgSrc = model.thumb || model.image;
+    html += `<div class="${cardClass} ${eligSelectedModelId===model.id?'selected':''}" onclick="eligOpen('${model.id}')">
+      <img class="model-img" src="${imgSrc}" alt="${model.name}" loading="lazy" onerror="this.style.display='none'">
+      <div class="model-info">
+        <div class="model-name">${model.name}</div>
+        <div class="model-price">RM${model.priceFrom.toLocaleString('en-MY')} – RM${model.priceTo.toLocaleString('en-MY')}</div>
+        <div class="model-badge ${isPass?'lulus':'gagal'}">${isPass?'✅ LULUS':'❌ GAGAL'} ${isPass?passVariants+'/'+model.variants.length+' varian':''}</div>
+      </div></div>`;
+  });
+  grid.innerHTML = html;
+  if (salary >= 500) {
+    const gagal = ELIG_MODELS.length - passCount;
+    resultCount.textContent = `${passCount} model LULUS • ${gagal} model GAGAL`;
+  } else {
+    resultCount.textContent = '';
+  }
+}
+
+function eligOpen(modelId) {
+  eligSelectedModelId = modelId;
+  const model = ELIG_MODELS.find(m => m.id === modelId);
+  if (!model) return;
+  const salary = eligSalary || 0;
+  const panel = document.getElementById('eligPanel');
+  const overlay = document.getElementById('eligOverlay');
+  const content = document.getElementById('eligDetailContent');
+  let variantsHtml = '';
+  model.variants.forEach(v => {
+    const el = eligGetElig(v.price, salary, eligYears);
+    const monthly = eligCalcMonthly(v.price, eligYears);
+    const dotClass = el.eligible ? 'pass' : 'fail';
+    variantsHtml += `<tr><td class="variant-name">${v.name}</td><td>RM${v.price.toLocaleString('en-MY')}</td><td class="variant-monthly">RM${monthly.toLocaleString('en-MY',{minimumFractionDigits:2})}/bln</td><td class="variant-status"><span class="dot ${dotClass}"></span></td></tr>`;
+  });
+  const cheapest = Math.min(...model.variants.map(v=>v.price));
+  const cheapestMonthly = eligCalcMonthly(cheapest, eligYears);
+  const el = eligGetElig(cheapest, salary, eligYears);
+  content.innerHTML = `
+    <img class="detail-img" src="${model.image}" alt="${model.name}" onerror="this.outerHTML='<div style=\"background:#f8f8f8;border-radius:10px;padding:40px 20px;text-align:center;margin-bottom:16px;font-size:3rem;\">🚗</div>'">
+    <div class="detail-title">Perodua ${model.name}</div>
+    <div class="detail-tagline">${model.tagline} • ${model.category}</div>
+    <div class="detail-summary">
+      <div class="summary-item"><div class="val">RM${cheapest.toLocaleString('en-MY')}</div><div class="lbl">Harga Bermula</div></div>
+      <div class="summary-item"><div class="val">RM${cheapestMonthly.toLocaleString('en-MY',{minimumFractionDigits:2})}</div><div class="lbl">Bayaran/Bulan (${eligYears}thn)</div></div>
+      <div class="summary-item"><div class="val">${el.eligible?'✅ LULUS':'❌ GAGAL'}</div><div class="lbl">${el.eligible?'Anda Mampu!':'Minimum RM'+el.neededSalary.toLocaleString('en-MY')+'/bln'}</div></div>
+    </div>
+    <div class="variants-title">💰 Harga & Bayaran Bulanan</div>
+    <table class="variants-table"><thead><tr><th>Varian</th><th>Harga</th><th style="text-align:right">Bulanan</th><th style="text-align:center">Status</th></tr></thead><tbody>${variantsHtml}</tbody></table>
+    <a href="https://wa.me/60173500106?text=Hai! Saya nak tahu lebih lanjut tentang Perodua ${model.name}. Boleh consult?" class="detail-cta" target="_blank">💬 Tanya Sales Advisor</a>`;
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  eligRender();
+}
+
+function eligCloseDetail() {
+  document.getElementById('eligPanel').classList.remove('open');
+  document.getElementById('eligOverlay').classList.remove('open');
+  eligSelectedModelId = null;
+  eligRender();
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+  // Loan calc init
+  renderModels();
+  document.querySelectorAll('#page-loan .tenure-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#page-loan .tenure-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTenure = parseInt(btn.dataset.years);
+      updateAll();
+    });
+  });
+  document.querySelectorAll('#formSection input, #formSection select').forEach(el => {
+    el.addEventListener('input', updateAll);
+    el.addEventListener('change', updateAll);
+  });
+
+  // Elig init
+  let debounceTimer;
+  document.getElementById('eligSalaryInput').addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(eligRender, 200);
+  });
+  document.querySelectorAll('#page-elig .tenure-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#page-elig .tenure-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      eligYears = parseInt(btn.dataset.years);
+      eligRender();
+    });
+  });
+  document.getElementById('eligClose').addEventListener('click', eligCloseDetail);
+  document.getElementById('eligOverlay').addEventListener('click', eligCloseDetail);
+  eligRender();
+});
+</script>
+</body>
+</html>
